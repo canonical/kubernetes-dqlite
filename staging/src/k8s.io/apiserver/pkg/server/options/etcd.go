@@ -85,7 +85,9 @@ func (s *EtcdOptions) Validate() []error {
 
 	allErrors := []error{}
 	if len(s.StorageConfig.Transport.ServerList) == 0 {
-		allErrors = append(allErrors, fmt.Errorf("--etcd-servers must be specified"))
+		if s.StorageConfig.Type != storagebackend.StorageTypeDqlite {
+			allErrors = append(allErrors, fmt.Errorf("--etcd-servers must be specified"))
+		}
 	}
 
 	if s.StorageConfig.Type != storagebackend.StorageTypeUnset && !storageTypes.Has(s.StorageConfig.Type) {
