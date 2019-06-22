@@ -62,6 +62,7 @@ type EtcdOptions struct {
 
 var storageTypes = sets.NewString(
 	storagebackend.StorageTypeETCD3,
+	storagebackend.StorageTypeDqlite,
 )
 
 func NewEtcdOptions(backendConfig *storagebackend.Config) *EtcdOptions {
