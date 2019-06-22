@@ -138,7 +138,7 @@ func NewServerRunOptions() *ServerRunOptions {
 func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 	// Add the generic flags.
 	s.GenericServerRunOptions.AddUniversalFlags(fss.FlagSet("generic"))
-	s.Etcd.AddFlags(fss.FlagSet("etcd"))
+	s.Etcd.AddFlags(fss.FlagSet("storage"))
 	s.SecureServing.AddFlags(fss.FlagSet("secure serving"))
 	s.InsecureServing.AddFlags(fss.FlagSet("insecure serving"))
 	s.InsecureServing.AddUnqualifiedFlags(fss.FlagSet("insecure serving")) // TODO: remove it until kops stops using `--address`
