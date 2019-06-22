@@ -25,8 +25,9 @@ import (
 )
 
 const (
-	StorageTypeUnset = ""
-	StorageTypeETCD3 = "etcd3"
+	StorageTypeUnset  = ""
+	StorageTypeETCD3  = "etcd3"
+	StorageTypeDqlite = "dqlite"
 
 	DefaultCompactInterval      = 5 * time.Minute
 	DefaultDBMetricPollInterval = 30 * time.Second
