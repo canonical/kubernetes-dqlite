@@ -30,6 +30,7 @@ const (
 	StorageTypeDqlite = "dqlite"
 
 	DefaultCompactInterval = 5 * time.Minute
+	DefaultDir             = "/var/lib/kubernetes/backend"
 )
 
 // TransportConfig holds all connection related info,  i.e. equal TransportConfig means equal servers we talk to.
@@ -72,6 +73,9 @@ type Config struct {
 	CompactionInterval time.Duration
 	// CountMetricPollPeriod specifies how often should count metric be updated
 	CountMetricPollPeriod time.Duration
+
+	// Dir is the directory to use for persisting local data.
+	Dir string
 }
 
 func NewDefaultConfig(prefix string, codec runtime.Codec) *Config {
@@ -80,5 +84,6 @@ func NewDefaultConfig(prefix string, codec runtime.Codec) *Config {
 		Prefix:             prefix,
 		Codec:              codec,
 		CompactionInterval: DefaultCompactInterval,
+		Dir:                DefaultDir,
 	}
 }

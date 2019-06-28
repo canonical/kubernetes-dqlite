@@ -179,6 +179,10 @@ func (s *EtcdOptions) AddFlags(fs *pflag.FlagSet) {
 
 	fs.DurationVar(&s.StorageConfig.CountMetricPollPeriod, "etcd-count-metric-poll-period", s.StorageConfig.CountMetricPollPeriod, ""+
 		"Frequency of polling etcd for number of resources per type. 0 disables the metric collection.")
+
+	fs.StringVar(&s.StorageConfig.Dir, "storage-dir", s.StorageConfig.Dir,
+		"Directory to use for storing local storage data.")
+
 }
 
 func (s *EtcdOptions) ApplyTo(c *server.Config) error {
