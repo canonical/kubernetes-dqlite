@@ -184,8 +184,9 @@ func (s *EtcdOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.DurationVar(&s.StorageConfig.DBMetricPollInterval, "etcd-db-metric-poll-interval", s.StorageConfig.DBMetricPollInterval,
 		"The interval of requests to poll etcd and update metric. 0 disables the metric collection")
 
-	fs.DurationVar(&s.StorageConfig.HealthcheckTimeout, "etcd-healthcheck-timeout", s.StorageConfig.HealthcheckTimeout,
-		"The timeout to use when checking etcd health.")
+	fs.StringVar(&s.StorageConfig.Dir, "storage-dir", s.StorageConfig.Dir,
+		"Directory to use for storing local storage data.")
+
 }
 
 func (s *EtcdOptions) ApplyTo(c *server.Config) error {
