@@ -33,6 +33,7 @@ const (
 	DefaultCompactInterval      = 5 * time.Minute
 	DefaultDBMetricPollInterval = 30 * time.Second
 	DefaultHealthcheckTimeout   = 2 * time.Second
+	DefaultDir                  = "/var/lib/kubernetes/backend"
 )
 
 // TransportConfig holds all connection related info,  i.e. equal TransportConfig means equal servers we talk to.
@@ -75,12 +76,16 @@ type Config struct {
 	CompactionInterval time.Duration
 	// CountMetricPollPeriod specifies how often should count metric be updated
 	CountMetricPollPeriod time.Duration
+
 	// DBMetricPollInterval specifies how often should storage backend metric be updated.
 	DBMetricPollInterval time.Duration
 	// HealthcheckTimeout specifies the timeout used when checking health
 	HealthcheckTimeout time.Duration
 
 	LeaseManagerConfig etcd3.LeaseManagerConfig
+
+	// Dir is the directory to use for persisting local data.
+	Dir string
 }
 
 func NewDefaultConfig(prefix string, codec runtime.Codec) *Config {
@@ -92,5 +97,6 @@ func NewDefaultConfig(prefix string, codec runtime.Codec) *Config {
 		DBMetricPollInterval: DefaultDBMetricPollInterval,
 		HealthcheckTimeout:   DefaultHealthcheckTimeout,
 		LeaseManagerConfig:   etcd3.NewDefaultLeaseManagerConfig(),
+		Dir:                  DefaultDir,
 	}
 }
