@@ -209,6 +209,11 @@ func CreateServerChain(completedOptions completedServerRunOptions, stopCh <-chan
 		return nil, err
 	}
 
+	if completedOptions.Etcd.StorageConfig.Type == storagebackend.StorageTypeDqlite {
+		kvsqlRoutes := kvsqlfactory.Rest{}
+		kvsqlRoutes.Install(kubeAPIServer.GenericAPIServer.Handler.GoRestfulContainer)
+	}
+
 	// aggregator comes last in the chain
 	aggregatorConfig, err := createAggregatorConfig(*kubeAPIServerConfig.GenericConfig, completedOptions.ServerRunOptions, kubeAPIServerConfig.ExtraConfig.VersionedInformers, serviceResolver, proxyTransport, pluginInitializer)
 	if err != nil {
