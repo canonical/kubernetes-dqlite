@@ -82,6 +82,32 @@ kube::util::wait_for_success(){
   return 1
 }
 
+kube::util::wait_for_socket() {
+  local socket=$1
+  local url=$2
+  local prefix=${3:-}
+  local wait=${4:-1}
+  local times=${5:-30}
+  local maxtime=${6:-1}
+
+  command -v curl >/dev/null || {
+    kube::log::usage "curl must be installed"
+    exit 1
+  }
+
+  local i
+  for i in $(seq 1 "${times}"); do
+    local out
+    if out=$(curl --unix-socket "${socket}" --max-time "${maxtime}" -gkfs "${url}" 2>/dev/null); then
+      kube::log::status "On try ${i}, ${prefix}: ${out}"
+      return 0
+    fi
+    sleep "${wait}"
+  done
+  kube::log::error "Timed out waiting for ${prefix} to answer at ${url}; tried ${times} waiting ${wait} between each"
+  return 1
+}
+
 # Example:  kube::util::trap_add 'echo "in trap DEBUG"' DEBUG
 # See: http://stackoverflow.com/questions/3338030/multiple-bash-traps-for-the-same-signal
 kube::util::trap_add() {
