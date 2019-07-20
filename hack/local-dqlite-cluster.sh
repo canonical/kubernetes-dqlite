@@ -13,6 +13,7 @@ CONTROLLER_MANAGER_PIDS=""
 N_MASTERS=3
 LOG_LEVEL=${LOG_LEVEL:-3}
 
+KUBEADM="${GO_OUT}/kubeadm"
 KUBECTL="${GO_OUT}/kubectl"
 HYPERKUBE="${GO_OUT}/hyperkube"
 
@@ -64,40 +65,44 @@ function start_apiserver {
     ID="$1"
     NODE_DIR="${DATA_DIR}/${ID}"
     STORAGE_DIR="${NODE_DIR}/backend"
+    KUBEADM_CONF="${NODE_DIR}/kubeadm.conf"
     CERT_DIR="${NODE_DIR}/certs"
-    ROOT_CA_FILE=${CERT_DIR}/client-ca.crt
-    ROOT_CA_KEY=${CERT_DIR}/client-ca.key
     SECURE_PORT="644${ID}"
     INSECURE_PORT="808${ID}"
     LOG="${NODE_DIR}/apiserver.log"
-    SERVICE_ACCOUNT_KEY="${CERT_DIR}/sa.key"
 
     mkdir -p ${NODE_DIR}
     mkdir -p ${CERT_DIR}
 
-    if ! [ -f "${CERT_DIR}/client-ca.crt" ]; then
+    if ! [ -f "${CERT_DIR}/ca.crt" ]; then
+	cat > ${KUBEADM_CONF} <<EOF
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: ${LOAD_BALANCER_IP}
+  bindPort: 644${ID}
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: stable
+controlPlaneEndpoint: "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}"
+certificatesDir: ${CERT_DIR}
+EOF
 	if [ "$ID" == "1" ]; then
-	    kube::util::create_signing_certkey "" ${CERT_DIR} client '"client auth","server auth"'
-	    kube::util::create_serving_certkey "" ${CERT_DIR} client-ca kube-apiserver kubernetes.default kubernetes.default.svc localhost ${LOAD_BALANCER_IP} ${LOAD_BALANCER_DNS}
-	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca scheduler system:kube-scheduler
-	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca controller system:kube-controller-manager
-	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca admin system:admin system:masters
-	    openssl genrsa -out ${SERVICE_ACCOUNT_KEY} 2048 2>/dev/null
-	    kube::util::write_client_kubeconfig "" ${CERT_DIR} ${ROOT_CA_FILE} ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} admin
-	    kube::util::write_client_kubeconfig "" ${CERT_DIR} ${ROOT_CA_FILE} ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} scheduler
-	    kube::util::write_client_kubeconfig "" ${CERT_DIR} ${ROOT_CA_FILE} ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} controller
+	    ${KUBEADM} init phase certs ca --config=${KUBEADM_CONF}
+	    ${KUBEADM} init phase certs apiserver --config=${KUBEADM_CONF}
+	    # Use openssl to generate the service account key, since kubeadm doesn't
+	    # accept the --config option for this subcommand.
+	    #${KUBEADM} init phase certs sa --cert-dir=${CERT_DIR}
+	    openssl genrsa -out ${CERT_DIR}/sa.key 2048 2>/dev/null
+	    ${KUBEADM} init phase kubeconfig admin --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
 	    ${KUBECTL} dqlite bootstrap --id 1 --address 127.0.0.1:9001 --dir ${STORAGE_DIR}
 	else
 	    BOOTSTRAP_CERT_DIR="${DATA_DIR}/1/certs"
-	    CERT_FILES="client-ca.key client-ca.crt client-ca-config.json sa.key"
+	    CERT_FILES="ca.key ca.crt sa.key"
 	    for f in ${CERT_FILES}; do
 		cp ${BOOTSTRAP_CERT_DIR}/${f} ${CERT_DIR}/${f}
 	    done
-	    kube::util::create_serving_certkey "" ${CERT_DIR} client-ca kube-apiserver kubernetes.default kubernetes.default.svc localhost ${LOAD_BALANCER_IP} ${LOAD_BALANCER_DNS}
-	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca scheduler system:kube-scheduler
-	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca controller system:kube-controller-manager
-	    kube::util::write_client_kubeconfig "" ${CERT_DIR} ${ROOT_CA_FILE} ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} scheduler
-	    kube::util::write_client_kubeconfig "" ${CERT_DIR} ${ROOT_CA_FILE} ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} controller
 	    SEP=""
 	    CLUSTER=""
 	    for OTHER_ID in $(seq $(($ID - 1))); do
@@ -106,12 +111,15 @@ function start_apiserver {
 	    done
 	    ${KUBECTL} dqlite join --id ${ID} --address 127.0.0.1:900${ID} --dir ${STORAGE_DIR} --cluster ${CLUSTER}
 	fi
+	${KUBEADM} init phase certs apiserver --config=${KUBEADM_CONF}
+	${KUBEADM} init phase kubeconfig scheduler --config=${KUBEADM_CONF} --kubeconfig-dir=${NODE_DIR}
+	${KUBEADM} init phase kubeconfig controller-manager --config=${KUBEADM_CONF} --kubeconfig-dir=${NODE_DIR}
     fi
 
     $HYPERKUBE kube-apiserver \
 	       --v=${LOG_LEVEL} \
 	       --authorization-mode=Node,RBAC \
-	       --client-ca-file=${CERT_DIR}/client-ca.crt \
+	       --client-ca-file=${CERT_DIR}/ca.crt \
 	       --storage-dir=${STORAGE_DIR} \
 	       --cert-dir=${CERT_DIR} \
 	       --advertise-address=${LOAD_BALANCER_IP} \
@@ -119,10 +127,10 @@ function start_apiserver {
 	       --secure-port=${SECURE_PORT} \
 	       --insecure-bind-address=127.0.0.1 \
 	       --insecure-port=${INSECURE_PORT} \
-	       --tls-cert-file="${CERT_DIR}/serving-kube-apiserver.crt" \
-	       --tls-private-key-file="${CERT_DIR}/serving-kube-apiserver.key" \
+	       --tls-cert-file=${CERT_DIR}/apiserver.crt \
+	       --tls-private-key-file=${CERT_DIR}/apiserver.key \
 	       --storage-backend=dqlite \
-	       --service-account-key-file=${SERVICE_ACCOUNT_KEY} \
+	       --service-account-key-file=${CERT_DIR}/sa.key \
 	       --service-account-lookup=true \
 	       --watch-cache=false \
 	       --apiserver-count="3" \
@@ -143,25 +151,22 @@ function start_controller_manager {
     ID="$1"
     NODE_DIR="${DATA_DIR}/${ID}"
     CERT_DIR="${NODE_DIR}/certs"
-    ROOT_CA_FILE=${CERT_DIR}/client-ca.crt
-    ROOT_CA_KEY=${CERT_DIR}/client-ca.key
-    SERVICE_ACCOUNT_KEY="${CERT_DIR}/sa.key"
     SECURE_PORT="${ID}0257"
     INSECURE_PORT="${ID}0252"
     LOG="${NODE_DIR}/controller-manager.log"
 
     $HYPERKUBE kube-controller-manager \
 	       --v=${LOG_LEVEL} \
-	       --service-account-private-key-file=${SERVICE_ACCOUNT_KEY} \
-	       --root-ca-file=${ROOT_CA_FILE} \
-	       --cluster-signing-cert-file=${ROOT_CA_FILE} \
-	       --cluster-signing-key-file=${ROOT_CA_KEY} \
+	       --service-account-private-key-file=${CERT_DIR}/sa.key \
+	       --root-ca-file=${CERT_DIR}/ca.crt \
+	       --cluster-signing-cert-file=${CERT_DIR}/ca.crt \
+	       --cluster-signing-key-file=${CERT_DIR}/ca.key \
 	       --secure-port=${SECURE_PORT} \
 	       --port=${INSECURE_PORT} \
 	       --leader-elect-lease-duration=20s \
 	       --leader-elect-renew-deadline=15s \
 	       --leader-elect-retry-period=4s \
-	       --kubeconfig "${CERT_DIR}/controller.kubeconfig" \
+	       --kubeconfig=${NODE_DIR}/controller-manager.conf \
 	       --use-service-account-credentials \
 	       --cert-dir=${CERT_DIR} > ${LOG} 2>&1 &
     if [ "$ID" == "1" ]; then
@@ -186,7 +191,7 @@ function start_scheduler {
 	       --leader-elect-retry-period=4s \
 	       --secure-port=${SECURE_PORT} \
 	       --port=${INSECURE_PORT} \
-	       --kubeconfig="${CERT_DIR}/scheduler.kubeconfig" > ${LOG} 2>&1 &
+	       --kubeconfig="${NODE_DIR}/scheduler.conf" > ${LOG} 2>&1 &
     if [ "$ID" == "1" ]; then
 	SCHEDULER_PIDS="$!"
     else
