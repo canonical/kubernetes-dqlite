@@ -10,15 +10,13 @@ LOAD_BALANCER_PORT="6440"
 APISERVER_PIDS=""
 SCHEDULER_PIDS=""
 CONTROLLER_MANAGER_PIDS=""
-N_MASTERS=3
+KUBELET_PID=""
+N_MASTERS=1
 LOG_LEVEL=${LOG_LEVEL:-3}
 
 KUBEADM="${GO_OUT}/kubeadm"
 KUBECTL="${GO_OUT}/kubectl"
 HYPERKUBE="${GO_OUT}/hyperkube"
-
-# many dev environments run with swap on, so we don't fail in this env
-FAIL_SWAP_ON=${FAIL_SWAP_ON:-"false"}
 
 # Build flags
 GOFLAGS="-tags=libsqlite3"
@@ -29,7 +27,7 @@ set -e
 
 source "${KUBE_ROOT}/hack/lib/init.sh"
 
-start_load_balancer() {
+function start_load_balancer {
     HAPROXY_CFG="${DATA_DIR}/haproxy.cfg"
 
     if ! ip address show dev k8s > /dev/null 2>&1; then
@@ -95,6 +93,7 @@ EOF
 	    # accept the --config option for this subcommand.
 	    #${KUBEADM} init phase certs sa --cert-dir=${CERT_DIR}
 	    openssl genrsa -out ${CERT_DIR}/sa.key 2048 2>/dev/null
+	    ${KUBEADM} init phase kubeconfig kubelet --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
 	    ${KUBEADM} init phase kubeconfig admin --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
 	    ${KUBECTL} dqlite bootstrap --id 1 --address 127.0.0.1:9001 --dir ${STORAGE_DIR}
 	else
@@ -132,8 +131,7 @@ EOF
 	       --storage-backend=dqlite \
 	       --service-account-key-file=${CERT_DIR}/sa.key \
 	       --service-account-lookup=true \
-	       --watch-cache=false \
-	       --apiserver-count="3" \
+	       --apiserver-count=${N_MASTERS} \
 	       --endpoint-reconciler-type="master-count" \
 	       --external-hostname=${LOAD_BALANCER_DNS} > ${LOG} 2>&1 &
     if [ "$ID" == "1" ]; then
@@ -141,10 +139,6 @@ EOF
     else
 	APISERVER_PIDS="${APISERVER_PIDS} ${!}"
     fi
-
-    # Grant apiserver permission to speak to the kubelet
-    # ${KUBECTL} --kubeconfig "${CERT_DIR}/admin.kubeconfig" create clusterrolebinding kube-apiserver-kubelet-admin --clusterrole=system:kubelet-api-admin --user=kube-apiserver
-
 }
 
 function start_controller_manager {
@@ -210,9 +204,32 @@ function start_controlplane {
 
     # Wait for the cluster to become available
     kube::util::wait_for_url "https://${LOAD_BALANCER_IP}:${LOAD_BALANCER_PORT}/healthz" "apiserver: " 1 10 1
+
+    # Grant apiserver permission to speak to the kubelet
+    ${KUBECTL} --kubeconfig ${DATA_DIR}/admin.conf create clusterrolebinding kube-apiserver-kubelet-admin --clusterrole=system:kubelet-api-admin --user=kube-apiserver
+
+    # Create storage
+    ${KUBECTL} --kubeconfig=${DATA_DIR}/admin.conf create -f ${KUBE_ROOT}/cluster/addons/storage-class/local/default.yaml
 }
 
-cleanup()
+function start_kubelet {
+    DOCKER_DIR="${DATA_DIR}/docker"
+    LOG="${DATA_DIR}/kubelet.log"
+
+    kube::docker::start
+
+    sudo -E $HYPERKUBE kubelet \
+	 --v=${LOG_LEVEL} \
+	 --address=127.0.0.1 \
+	 --kubeconfig=${DATA_DIR}/kubelet.conf \
+	 --client-ca-file=${DATA_DIR}/1/certs/ca.crt \
+	 --docker-endpoint=unix://${DOCKER_DIR}/socket \
+	 --fail-swap-on=false \
+	 --hostname-override="localhost" > ${LOG} 2>&1 &
+    KUBELET_PID=$!
+}
+
+function cleanup
 {
     if [ -n "${LOAD_BALANCER_PID}" ]; then
         kill -SIGUSR1 ${LOAD_BALANCER_PID}
@@ -238,7 +255,12 @@ cleanup()
 	    fi
 	done
     fi
-
+    if [ -n "${KUBELET_PID}" ]; then
+        if sudo kill -SIGTERM ${KUBELET_PID}; then
+	    echo killed kubelet ${KUBELET_PID}
+	fi
+    fi
+    kube::docker::stop
     kube::util::wait-for-jobs || true
 
     exit 0
@@ -256,5 +278,6 @@ mkdir -p ${DATA_DIR}
 
 start_load_balancer
 start_controlplane
+start_kubelet
 
 while true; do sleep 1 || true; done
