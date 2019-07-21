@@ -72,7 +72,7 @@ function start_apiserver {
     mkdir -p ${NODE_DIR}
     mkdir -p ${CERT_DIR}
 
-    if ! [ -f "${CERT_DIR}/ca.crt" ]; then
+    if ! [ -f ${CERT_DIR}/client-ca.crt ]; then
 	cat > ${KUBEADM_CONF} <<EOF
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: InitConfiguration
@@ -87,18 +87,24 @@ controlPlaneEndpoint: "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}"
 certificatesDir: ${CERT_DIR}
 EOF
 	if [ "$ID" == "1" ]; then
-	    ${KUBEADM} init phase certs ca --config=${KUBEADM_CONF}
-	    ${KUBEADM} init phase certs apiserver --config=${KUBEADM_CONF}
+	    # ${KUBEADM} init phase certs ca --config=${KUBEADM_CONF}
+            kube::util::create_signing_certkey "" ${CERT_DIR} server '"server auth"'
+            kube::util::create_signing_certkey "" ${CERT_DIR} client '"client auth"'
 	    # Use openssl to generate the service account key, since kubeadm doesn't
 	    # accept the --config option for this subcommand.
 	    #${KUBEADM} init phase certs sa --cert-dir=${CERT_DIR}
 	    openssl genrsa -out ${CERT_DIR}/sa.key 2048 2>/dev/null
-	    ${KUBEADM} init phase kubeconfig kubelet --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
-	    ${KUBEADM} init phase kubeconfig admin --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
+	    #${KUBEADM} init phase kubeconfig kubelet --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
+	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca kubelet system:node:127.0.0.1 system:nodes
+	    kube::util::write_client_kubeconfig "" ${CERT_DIR}  ${CERT_DIR}/server-ca.crt ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} kubelet
+	    #${KUBEADM} init phase kubeconfig admin --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
+	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca admin system:admin system:masters
+	    kube::util::write_client_kubeconfig "" ${CERT_DIR} ${CERT_DIR}/server-ca.crt ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} admin
 	    ${KUBECTL} dqlite bootstrap --id 1 --address 127.0.0.1:9001 --dir ${STORAGE_DIR}
 	else
 	    BOOTSTRAP_CERT_DIR="${DATA_DIR}/1/certs"
-	    CERT_FILES="ca.key ca.crt sa.key"
+	    #CERT_FILES="ca.key ca.crt sa.key"
+	    CERT_FILES="server-ca.key server-ca.crt server-ca-config.json client-ca.key client-ca.crt client-ca-config.json sa.key"
 	    for f in ${CERT_FILES}; do
 		cp ${BOOTSTRAP_CERT_DIR}/${f} ${CERT_DIR}/${f}
 	    done
@@ -110,27 +116,41 @@ EOF
 	    done
 	    ${KUBECTL} dqlite join --id ${ID} --address 127.0.0.1:900${ID} --dir ${STORAGE_DIR} --cluster ${CLUSTER}
 	fi
-	${KUBEADM} init phase certs apiserver --config=${KUBEADM_CONF}
-	${KUBEADM} init phase kubeconfig scheduler --config=${KUBEADM_CONF} --kubeconfig-dir=${NODE_DIR}
-	${KUBEADM} init phase kubeconfig controller-manager --config=${KUBEADM_CONF} --kubeconfig-dir=${NODE_DIR}
+
+	#${KUBEADM} init phase certs apiserver --config=${KUBEADM_CONF}
+	kube::util::create_serving_certkey "" ${CERT_DIR} server-ca kube-apiserver kubernetes.default kubernetes.default.svc localhost ${LOAD_BALANCER_IP} ${LOAD_BALANCER_DNS}
+	#${KUBEADM} init phase certs apiserver-kubelet-client --config=${KUBEADM_CONF}
+	kube::util::create_client_certkey "" ${CERT_DIR} client-ca kube-apiserver kube-apiserver
+	#${KUBEADM} init phase kubeconfig scheduler --config=${KUBEADM_CONF} --kubeconfig-dir=${NODE_DIR}
+	kube::util::create_client_certkey "" ${CERT_DIR} client-ca scheduler  system:kube-scheduler
+	kube::util::write_client_kubeconfig "" ${CERT_DIR} ${CERT_DIR}/server-ca.crt ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} scheduler
+	#${KUBEADM} init phase kubeconfig controller-manager --config=${KUBEADM_CONF} --kubeconfig-dir=${NODE_DIR}
+	kube::util::create_client_certkey "" ${CERT_DIR} client-ca controller system:kube-controller-manager
+	kube::util::write_client_kubeconfig "" ${CERT_DIR} ${CERT_DIR}/server-ca.crt ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} controller
     fi
 
+    #--kubelet-client-certificate=${CERT_DIR}/apiserver-kubelet-client.crt \
+	#--kubelet-client-key=${CERT_DIR}/apiserver-kubelet-client.key \
     $HYPERKUBE kube-apiserver \
-	       --v=${LOG_LEVEL} \
+	       --v=9 \
 	       --authorization-mode=Node,RBAC \
-	       --client-ca-file=${CERT_DIR}/ca.crt \
+	       --client-ca-file=${CERT_DIR}/client-ca.crt \
 	       --storage-dir=${STORAGE_DIR} \
 	       --cert-dir=${CERT_DIR} \
 	       --advertise-address=${LOAD_BALANCER_IP} \
 	       --bind-address=${LOAD_BALANCER_IP} \
+	       --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,Priority,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
+	       --feature-gates=AllAlpha=false \
 	       --secure-port=${SECURE_PORT} \
 	       --insecure-bind-address=127.0.0.1 \
 	       --insecure-port=${INSECURE_PORT} \
-	       --tls-cert-file=${CERT_DIR}/apiserver.crt \
-	       --tls-private-key-file=${CERT_DIR}/apiserver.key \
+	       --tls-cert-file=${CERT_DIR}/serving-kube-apiserver.crt \
+	       --tls-private-key-file=${CERT_DIR}/serving-kube-apiserver.key \
 	       --storage-backend=dqlite \
 	       --service-account-key-file=${CERT_DIR}/sa.key \
 	       --service-account-lookup=true \
+	       --kubelet-client-certificate=${CERT_DIR}/client-kube-apiserver.crt \
+	       --kubelet-client-key=${CERT_DIR}/client-kube-apiserver.key \
 	       --apiserver-count=${N_MASTERS} \
 	       --endpoint-reconciler-type="master-count" \
 	       --external-hostname=${LOAD_BALANCER_DNS} > ${LOG} 2>&1 &
@@ -152,15 +172,15 @@ function start_controller_manager {
     $HYPERKUBE kube-controller-manager \
 	       --v=${LOG_LEVEL} \
 	       --service-account-private-key-file=${CERT_DIR}/sa.key \
-	       --root-ca-file=${CERT_DIR}/ca.crt \
-	       --cluster-signing-cert-file=${CERT_DIR}/ca.crt \
-	       --cluster-signing-key-file=${CERT_DIR}/ca.key \
+	       --root-ca-file=${CERT_DIR}/server-ca.crt \
+	       --cluster-signing-cert-file=${CERT_DIR}/client-ca.crt \
+	       --cluster-signing-key-file=${CERT_DIR}/client-ca.key \
 	       --secure-port=${SECURE_PORT} \
 	       --port=${INSECURE_PORT} \
 	       --leader-elect-lease-duration=20s \
 	       --leader-elect-renew-deadline=15s \
 	       --leader-elect-retry-period=4s \
-	       --kubeconfig=${NODE_DIR}/controller-manager.conf \
+	       --kubeconfig=${CERT_DIR}/controller.kubeconfig \
 	       --use-service-account-credentials \
 	       --cert-dir=${CERT_DIR} > ${LOG} 2>&1 &
     if [ "$ID" == "1" ]; then
@@ -185,7 +205,7 @@ function start_scheduler {
 	       --leader-elect-retry-period=4s \
 	       --secure-port=${SECURE_PORT} \
 	       --port=${INSECURE_PORT} \
-	       --kubeconfig="${NODE_DIR}/scheduler.conf" > ${LOG} 2>&1 &
+	       --kubeconfig=${CERT_DIR}/scheduler.kubeconfig > ${LOG} 2>&1 &
     if [ "$ID" == "1" ]; then
 	SCHEDULER_PIDS="$!"
     else
@@ -206,26 +226,51 @@ function start_controlplane {
     kube::util::wait_for_url "https://${LOAD_BALANCER_IP}:${LOAD_BALANCER_PORT}/healthz" "apiserver: " 1 10 1
 
     # Grant apiserver permission to speak to the kubelet
-    ${KUBECTL} --kubeconfig ${DATA_DIR}/admin.conf create clusterrolebinding kube-apiserver-kubelet-admin --clusterrole=system:kubelet-api-admin --user=kube-apiserver
+    ${KUBECTL} --kubeconfig ${DATA_DIR}/1/certs/admin.kubeconfig create clusterrolebinding kube-apiserver-kubelet-admin --clusterrole=system:kubelet-api-admin --user=kube-apiserver
 
     # Create storage
-    ${KUBECTL} --kubeconfig=${DATA_DIR}/admin.conf create -f ${KUBE_ROOT}/cluster/addons/storage-class/local/default.yaml
+    ${KUBECTL} --kubeconfig=${DATA_DIR}/1/certs/admin.kubeconfig create -f ${KUBE_ROOT}/cluster/addons/storage-class/local/default.yaml
 }
 
 function start_kubelet {
     DOCKER_DIR="${DATA_DIR}/docker"
     LOG="${DATA_DIR}/kubelet.log"
+    LOG_LEVEL=9
 
     kube::docker::start
 
+    #--docker-endpoint=unix://${DOCKER_DIR}/socket \
+	#--kubeconfig=${DATA_DIR}/kubelet.conf \
     sudo -E $HYPERKUBE kubelet \
 	 --v=${LOG_LEVEL} \
 	 --address=127.0.0.1 \
-	 --kubeconfig=${DATA_DIR}/kubelet.conf \
-	 --client-ca-file=${DATA_DIR}/1/certs/ca.crt \
-	 --docker-endpoint=unix://${DOCKER_DIR}/socket \
+	 --root-dir=${DATA_DIR}/kubelet \
+	 --cert-dir=${DATA_DIR}/kubelet/pki \
+	 --kubeconfig=${DATA_DIR}/1/certs/kubelet.kubeconfig \
+	 --client-ca-file=${DATA_DIR}/1/certs/client-ca.crt \
 	 --fail-swap-on=false \
-	 --hostname-override="localhost" > ${LOG} 2>&1 &
+	 --vmodule="" \
+	 --chaos-chance=0.0 \
+	 --container-runtime=docker \
+	 --hostname-override=127.0.0.1 \
+	 --cloud-provider="" \
+	 --cloud-config="" \
+	 --address=127.0.0.1 \
+	 --feature-gates=AllAlpha=false \
+	 --cpu-cfs-quota=true \
+	 --enable-controller-attach-detach=true \
+	 --cgroups-per-qos=true \
+	 --cgroup-driver=cgroupfs \
+	 --cgroup-root="" \
+	 --pod-manifest-path=/var/run/kubernetes/static-pods \
+	 --authorization-mode=Webhook \
+	 --authentication-token-webhook \
+	 --cluster-dns=10.0.0.10 \
+	 --cluster-domain=cluster.local \
+	 --read-only-port=10255 \
+	 --runtime-request-timeout=2m \
+	 --port=10250 \
+	 --hostname-override=127.0.0.1 > ${LOG} 2>&1 &
     KUBELET_PID=$!
 }
 
