@@ -86,6 +86,8 @@ kubernetesVersion: stable
 controlPlaneEndpoint: "${LOAD_BALANCER_DNS}:${LOAD_BALANCER_PORT}"
 certificatesDir: ${CERT_DIR}
 EOF
+        mkdir -p $STORAGE_DIR
+        cp ./hack/testdata/cluster.crt ./hack/testdata/cluster.key $STORAGE_DIR
 	if [ "$ID" == "1" ]; then
 	    # ${KUBEADM} init phase certs ca --config=${KUBEADM_CONF}
             kube::util::create_signing_certkey "" ${CERT_DIR} server '"server auth"'
@@ -100,7 +102,7 @@ EOF
 	    #${KUBEADM} init phase kubeconfig admin --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
 	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca admin system:admin system:masters
 	    kube::util::write_client_kubeconfig "" ${CERT_DIR} ${CERT_DIR}/server-ca.crt ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} admin
-	    ${KUBECTL} dqlite bootstrap --id 1 --address 127.0.0.1:9001 --dir ${STORAGE_DIR}
+	    echo "Address: localhost:9001" > $STORAGE_DIR/init.yaml
 	else
 	    BOOTSTRAP_CERT_DIR="${DATA_DIR}/1/certs"
 	    #CERT_FILES="ca.key ca.crt sa.key"
@@ -108,13 +110,11 @@ EOF
 	    for f in ${CERT_FILES}; do
 		cp ${BOOTSTRAP_CERT_DIR}/${f} ${CERT_DIR}/${f}
 	    done
-	    SEP=""
-	    CLUSTER=""
+	    echo "Address: localhost:900${ID}" > $STORAGE_DIR/init.yaml
+	    echo "Cluster:" >> $STORAGE_DIR/init.yaml
 	    for OTHER_ID in $(seq $(($ID - 1))); do
-		CLUSTER="${CLUSTER}${SEP}127.0.0.1:900${OTHER_ID}"
-		SEP=","
+	        echo "- localhost:900${OTHER_ID}" >> $STORAGE_DIR/init.yaml
 	    done
-	    ${KUBECTL} dqlite join --id ${ID} --address 127.0.0.1:900${ID} --dir ${STORAGE_DIR} --cluster ${CLUSTER}
 	fi
 
 	#${KUBEADM} init phase certs apiserver --config=${KUBEADM_CONF}
@@ -132,7 +132,7 @@ EOF
     #--kubelet-client-certificate=${CERT_DIR}/apiserver-kubelet-client.crt \
 	#--kubelet-client-key=${CERT_DIR}/apiserver-kubelet-client.key \
     $HYPERKUBE kube-apiserver \
-	       --v=9 \
+	       --v=${LOG_LEVEL} \
 	       --authorization-mode=Node,RBAC \
 	       --client-ca-file=${CERT_DIR}/client-ca.crt \
 	       --storage-dir=${STORAGE_DIR} \
@@ -323,6 +323,6 @@ mkdir -p ${DATA_DIR}
 
 start_load_balancer
 start_controlplane
-start_kubelet
+#start_kubelet
 
 while true; do sleep 1 || true; done
