@@ -48,7 +48,7 @@ const (
 	// 1. It allows a watch-fed cache time to observe a namespace creation event
 	// 2. It allows time for a namespace creation to distribute to members of a storage cluster,
 	//    so the live lookup has a better chance of succeeding even if it isn't performed against the leader.
-	missingNamespaceWait = 50 * time.Millisecond
+	missingNamespaceWait = 1 * time.Millisecond
 )
 
 // Register registers a plugin
@@ -129,18 +129,22 @@ func (l *Lifecycle) Admit(ctx context.Context, a admission.Attributes, o admissi
 	if !exists && a.GetOperation() == admission.Create {
 		// give the cache time to observe the namespace before rejecting a create.
 		// this helps when creating a namespace and immediately creating objects within it.
-		time.Sleep(missingNamespaceWait)
-		namespace, err = l.namespaceLister.Get(a.GetNamespace())
-		switch {
-		case errors.IsNotFound(err):
-			// no-op
-		case err != nil:
-			return errors.NewInternalError(err)
-		default:
-			exists = true
-		}
-		if exists {
-			klog.V(4).Infof("found %s in cache after waiting", a.GetNamespace())
+		for i := 0; i < 50; i++ {
+			time.Sleep(missingNamespaceWait)
+			namespace, err = l.namespaceLister.Get(a.GetNamespace())
+			switch {
+			case errors.IsNotFound(err):
+				// no-op
+				continue
+			case err != nil:
+				return errors.NewInternalError(err)
+			default:
+				exists = true
+				break
+			}
+			if exists {
+				klog.V(4).Infof("found %s in cache after waiting", a.GetNamespace())
+			}
 		}
 	}
 
