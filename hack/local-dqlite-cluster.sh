@@ -16,7 +16,9 @@ LOG_LEVEL=${LOG_LEVEL:-3}
 
 KUBEADM="${GO_OUT}/kubeadm"
 KUBECTL="${GO_OUT}/kubectl"
-HYPERKUBE="${GO_OUT}/hyperkube"
+KUBE_APISERVER="${GO_OUT}/kube-apiserver"
+KUBE_CONTROLLER_MANAGER="${GO_OUT}/kube-controller-manager"
+KUBE_SCHEDULER="${GO_OUT}/kube-scheduler"
 
 # Build flags
 GOFLAGS="-tags=libsqlite3"
@@ -131,7 +133,7 @@ EOF
 
     #--kubelet-client-certificate=${CERT_DIR}/apiserver-kubelet-client.crt \
 	#--kubelet-client-key=${CERT_DIR}/apiserver-kubelet-client.key \
-    $HYPERKUBE kube-apiserver \
+    $KUBE_APISERVER \
 	       --v=${LOG_LEVEL} \
 	       --authorization-mode=Node,RBAC \
 	       --client-ca-file=${CERT_DIR}/client-ca.crt \
@@ -169,7 +171,7 @@ function start_controller_manager {
     INSECURE_PORT="${ID}0252"
     LOG="${NODE_DIR}/controller-manager.log"
 
-    $HYPERKUBE kube-controller-manager \
+    $KUBE_CONTROLLER_MANAGER \
 	       --v=${LOG_LEVEL} \
 	       --service-account-private-key-file=${CERT_DIR}/sa.key \
 	       --root-ca-file=${CERT_DIR}/server-ca.crt \
@@ -198,7 +200,7 @@ function start_scheduler {
     INSECURE_PORT="${ID}0251"
     LOG="${NODE_DIR}/scheduler.log"
 
-    $HYPERKUBE kube-scheduler \
+    $KUBE_SCHEDULER \
 	       --v=${LOG_LEVEL} \
 	       --leader-elect-lease-duration=20s \
 	       --leader-elect-renew-deadline=15s \
