@@ -85,6 +85,7 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.10.0
 	github.com/quobyte/api v0.1.2
+	github.com/rancher/kine v0.3.5
 	github.com/robfig/cron v1.1.0
 	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v1.0.0
