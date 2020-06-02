@@ -225,7 +225,7 @@ function start_controlplane {
     done
 
     # Wait for the cluster to become available
-    kube::util::wait_for_url "https://${LOAD_BALANCER_IP}:${LOAD_BALANCER_PORT}/healthz" "apiserver: " 1 10 1
+    kube::util::wait_for_url "https://${LOAD_BALANCER_IP}:${LOAD_BALANCER_PORT}/healthz" "apiserver: " 1 20 1
 
     # Grant apiserver permission to speak to the kubelet
     ${KUBECTL} --kubeconfig ${DATA_DIR}/1/certs/admin.kubeconfig create clusterrolebinding kube-apiserver-kubelet-admin --clusterrole=system:kubelet-api-admin --user=kube-apiserver
