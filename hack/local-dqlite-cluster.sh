@@ -119,6 +119,8 @@ EOF
 	    done
 	fi
 
+        echo $ID > $STORAGE_DIR/failure-domain
+
 	#${KUBEADM} init phase certs apiserver --config=${KUBEADM_CONF}
 	kube::util::create_serving_certkey "" ${CERT_DIR} server-ca kube-apiserver kubernetes.default kubernetes.default.svc localhost ${LOAD_BALANCER_IP} ${LOAD_BALANCER_DNS}
 	#${KUBEADM} init phase certs apiserver-kubelet-client --config=${KUBEADM_CONF}
