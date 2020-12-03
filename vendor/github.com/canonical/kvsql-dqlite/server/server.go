@@ -67,7 +67,7 @@ func New(dir string) (*Server, error) {
 	}
 
 	options := []app.Option{
-		app.WithTLS(app.SimpleTLSConfig(cfg.KeyPair, cfg.Pool)),
+		//app.WithTLS(app.SimpleTLSConfig(cfg.KeyPair, cfg.Pool)),
 		app.WithFailureDomain(cfg.FailureDomain),
 	}
 

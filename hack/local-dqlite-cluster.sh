@@ -104,7 +104,7 @@ EOF
 	    #${KUBEADM} init phase kubeconfig admin --config=${KUBEADM_CONF} --kubeconfig-dir=${DATA_DIR}
 	    kube::util::create_client_certkey "" ${CERT_DIR} client-ca admin system:admin system:masters
 	    kube::util::write_client_kubeconfig "" ${CERT_DIR} ${CERT_DIR}/server-ca.crt ${LOAD_BALANCER_DNS} ${LOAD_BALANCER_PORT} admin
-	    echo "Address: localhost:9001" > $STORAGE_DIR/init.yaml
+	    echo "Address: 127.0.0.1:9001" > $STORAGE_DIR/init.yaml
 	else
 	    BOOTSTRAP_CERT_DIR="${DATA_DIR}/1/certs"
 	    #CERT_FILES="ca.key ca.crt sa.key"
@@ -112,10 +112,10 @@ EOF
 	    for f in ${CERT_FILES}; do
 		cp ${BOOTSTRAP_CERT_DIR}/${f} ${CERT_DIR}/${f}
 	    done
-	    echo "Address: localhost:900${ID}" > $STORAGE_DIR/init.yaml
+	    echo "Address: 127.0.0.1:900${ID}" > $STORAGE_DIR/init.yaml
 	    echo "Cluster:" >> $STORAGE_DIR/init.yaml
 	    for OTHER_ID in $(seq $(($ID - 1))); do
-	        echo "- localhost:900${OTHER_ID}" >> $STORAGE_DIR/init.yaml
+	        echo "- 127.0.0.1:900${OTHER_ID}" >> $STORAGE_DIR/init.yaml
 	    done
 	fi
 

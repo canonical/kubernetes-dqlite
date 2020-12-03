@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 	"time"
@@ -22,10 +23,11 @@ import (
 // It takes care of starting a dqlite node and registering a dqlite Go SQL
 // driver.
 type App struct {
-	id              uint64
-	address         string
-	dir             string
-	node            *dqlite.Node
+	id      uint64
+	address string
+	dir     string
+	//node            *dqlite.Node
+	cmd             *exec.Cmd
 	nodeBindAddress string
 	listener        net.Listener
 	tls             *tlsSetup
@@ -143,7 +145,7 @@ func New(dir string, options ...Option) (app *App, err error) {
 
 	// Start the local dqlite engine.
 	var nodeBindAddress string
-	var nodeDial client.DialFunc
+	// var nodeDial client.DialFunc
 	if o.TLS != nil {
 		nodeBindAddress = fmt.Sprintf("@dqlite-%d", info.ID)
 
@@ -155,25 +157,32 @@ func New(dir string, options ...Option) (app *App, err error) {
 			nodeBindAddress = fmt.Sprintf("@snap.%s.dqlite-%d", snapInstanceName, info.ID)
 		}
 
-		nodeDial = makeNodeDialFunc(o.TLS.Dial)
+		// nodeDial = makeNodeDialFunc(o.TLS.Dial)
 	} else {
 		nodeBindAddress = info.Address
-		nodeDial = client.DefaultDialFunc
+		// nodeDial = client.DefaultDialFunc
 	}
-	node, err := dqlite.New(
-		info.ID, info.Address, dir,
-		dqlite.WithBindAddress(nodeBindAddress),
-		dqlite.WithDialFunc(nodeDial),
-		dqlite.WithFailureDomain(o.FailureDomain),
-		dqlite.WithNetworkLatency(o.NetworkLatency),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("create node: %w", err)
-	}
-	if err := node.Start(); err != nil {
-		return nil, fmt.Errorf("start node: %w", err)
-	}
-	cleanups = append(cleanups, func() { node.Close() })
+	nodeBindAddress = info.Address
+	/*
+		node, err := dqlite.New(
+			info.ID, info.Address, dir,
+			dqlite.WithBindAddress(nodeBindAddress),
+			// dqlite.WithDialFunc(nodeDial),
+			dqlite.WithFailureDomain(o.FailureDomain),
+		        dqlite.WithNetworkLatency(o.NetworkLatency),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("create node: %w", err)
+		}
+		if err := node.Start(); err != nil {
+			return nil, fmt.Errorf("start node: %w", err)
+		}
+		cleanups = append(cleanups, func() { node.Close() })
+	*/
+	cmd := exec.Command("/home/free/main", fmt.Sprintf("%d", info.ID), info.Address, dir, nodeBindAddress)
+	go func() {
+		cmd.Run()
+	}()
 
 	// Register the local dqlite driver.
 	driverDial := client.DefaultDialFunc
@@ -200,10 +209,11 @@ func New(dir string, options ...Option) (app *App, err error) {
 	ctx, stop := context.WithCancel(context.Background())
 
 	app = &App{
-		id:              info.ID,
-		address:         info.Address,
-		dir:             dir,
-		node:            node,
+		id:      info.ID,
+		address: info.Address,
+		dir:     dir,
+		//node:            node,
+		cmd:             cmd,
 		nodeBindAddress: nodeBindAddress,
 		store:           store,
 		driver:          driver,
@@ -335,9 +345,13 @@ func (a *App) Close() error {
 		a.listener.Close()
 		<-a.proxyCh
 	}
-	if err := a.node.Close(); err != nil {
-		return err
-	}
+	a.cmd.Process.Signal(os.Interrupt)
+	a.cmd.Wait()
+	/*
+		if err := a.node.Close(); err != nil {
+			return err
+		}
+	*/
 	return nil
 }
 
