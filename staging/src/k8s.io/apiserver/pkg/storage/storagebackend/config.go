@@ -31,6 +31,7 @@ const (
 
 	DefaultCompactInterval      = 5 * time.Minute
 	DefaultDBMetricPollInterval = 30 * time.Second
+        DefaultHealthcheckTimeout   = 2 * time.Second
 	DefaultDir                  = "/var/lib/kubernetes/backend"
 )
 
@@ -78,6 +79,9 @@ type Config struct {
 	// DBMetricPollInterval specifies how often should storage backend metric be updated.
 	DBMetricPollInterval time.Duration
 
+        // HealthcheckTimeout specifies the timeout used when checking health
+        HealthcheckTimeout time.Duration
+
 	// Dir is the directory to use for persisting local data.
 	Dir string
 }
@@ -89,6 +93,7 @@ func NewDefaultConfig(prefix string, codec runtime.Codec) *Config {
 		Codec:                codec,
 		CompactionInterval:   DefaultCompactInterval,
 		DBMetricPollInterval: DefaultDBMetricPollInterval,
+                HealthcheckTimeout:   DefaultHealthcheckTimeout,
 		Dir:                  DefaultDir,
 	}
 }
