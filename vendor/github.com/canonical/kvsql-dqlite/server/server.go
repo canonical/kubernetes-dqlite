@@ -94,7 +94,29 @@ func New(dir string) (*Server, error) {
 	}
 
 	socket := filepath.Join(dir, "kine.sock")
-	peers := filepath.Join(dir, "cluster.yaml")
+
+	// Connect to a single peer that is the current machine
+	info := client.NodeInfo{}
+	infoFile := filepath.Join(dir, "info.yaml")
+	data, err := ioutil.ReadFile(infoFile)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(data, &info); err != nil {
+		return nil, err
+	}
+	serverList := []client.NodeInfo{}
+	serverList = append(serverList, info)
+	data, err = yaml.Marshal(serverList)
+	if err != nil {
+		return  nil, err
+	}
+	localServerFile := filepath.Join(dir, "localnode.yaml")
+	if err := ioutil.WriteFile(localServerFile, data, 0600); err != nil {
+		return nil, err
+	}
+
+	peers := localServerFile
 	config := endpoint.Config{
 		Listener: fmt.Sprintf("unix://%s", socket),
 		Endpoint: fmt.Sprintf("dqlite://k8s?peer-file=%s&driver-name=%s", peers, app.Driver()),
