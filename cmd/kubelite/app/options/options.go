@@ -30,8 +30,8 @@ type Options struct {
 	ProxyArgsFile             string
 	KubeletArgsFile           string
 	APIServerArgsFile         string
-
 	KubeconfigFile            string
+	StartControlPlane         bool
 }
 
 func NewOptions() (*Options){
@@ -42,6 +42,7 @@ func NewOptions() (*Options){
 		"/var/snap/microk8s/current/args/kubelet",
 		"/var/snap/microk8s/current/args/kube-apiserver",
 		"/var/snap/microk8s/current/credentials/client.config",
+		true,
 	}
 	return &o
 }
