@@ -36,18 +36,21 @@ var liteCmd = &cobra.Command{
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := genericapiserver.SetupSignalContext()
-		apiserverArgs := options.ReadArgsFromFile(opts.APIServerArgsFile)
-		go daemon.StartAPIServer(apiserverArgs, ctx.Done())
-		daemon.WaitForAPIServer(opts.KubeconfigFile, 360 * time.Second)
 
-		controllerArgs := options.ReadArgsFromFile(opts.ControllerManagerArgsFile)
-		go daemon.StartControllerManager(controllerArgs, ctx)
+		if opts.StartControlPlane {
+			apiserverArgs := options.ReadArgsFromFile(opts.APIServerArgsFile)
+			go daemon.StartAPIServer(apiserverArgs, ctx.Done())
+			daemon.WaitForAPIServer(opts.KubeconfigFile, 360 * time.Second)
+
+			controllerArgs := options.ReadArgsFromFile(opts.ControllerManagerArgsFile)
+			go daemon.StartControllerManager(controllerArgs, ctx)
+
+			schedulerArgs := options.ReadArgsFromFile(opts.SchedulerArgsFile)
+			go daemon.StartScheduler(schedulerArgs, ctx)
+		}
 
 		proxyArgs := options.ReadArgsFromFile(opts.ProxyArgsFile)
 		go daemon.StartProxy(proxyArgs)
-
-		schedulerArgs := options.ReadArgsFromFile(opts.SchedulerArgsFile)
-		go daemon.StartScheduler(schedulerArgs, ctx)
 
 		kubeletArgs := options.ReadArgsFromFile(opts.KubeletArgsFile)
 		daemon.StartKubelet(kubeletArgs, ctx)
@@ -72,4 +75,5 @@ func init() {
 	liteCmd.Flags().StringVar(&opts.KubeletArgsFile, "kubelet-args-file", opts.KubeletArgsFile, "file with the arguments for kubelet")
 	liteCmd.Flags().StringVar(&opts.APIServerArgsFile, "apiserver-args-file", opts.APIServerArgsFile, "file with the arguments for the API server")
 	liteCmd.Flags().StringVar(&opts.KubeconfigFile , "kubeconfig-file", opts.KubeconfigFile, "the kubeconfig file to use to healthcheck the API server")
+	liteCmd.Flags().BoolVar(&opts.StartControlPlane, "start-control-plane", opts.StartControlPlane, "start the control plane (API server, scheduler and controller manager)")
 }
