@@ -30,10 +30,12 @@ const (
 	StorageTypeUnset = ""
 	StorageTypeETCD2 = "etcd2"
 	StorageTypeETCD3 = "etcd3"
+	StorageTypeDqlite = "dqlite"
 
 	DefaultCompactInterval      = 5 * time.Minute
 	DefaultDBMetricPollInterval = 30 * time.Second
 	DefaultHealthcheckTimeout   = 2 * time.Second
+	DefaultDir                  = "/var/lib/kubernetes/backend"
 )
 
 // TransportConfig holds all connection related info,  i.e. equal TransportConfig means equal servers we talk to.
@@ -82,6 +84,8 @@ type Config struct {
 	DBMetricPollInterval time.Duration
 	// HealthcheckTimeout specifies the timeout used when checking health
 	HealthcheckTimeout time.Duration
+	// Dir is the directory to use for persisting local data.
+	Dir string
 
 	LeaseManagerConfig etcd3.LeaseManagerConfig
 }
@@ -95,5 +99,6 @@ func NewDefaultConfig(prefix string, codec runtime.Codec) *Config {
 		DBMetricPollInterval: DefaultDBMetricPollInterval,
 		HealthcheckTimeout:   DefaultHealthcheckTimeout,
 		LeaseManagerConfig:   etcd3.NewDefaultLeaseManagerConfig(),
+		Dir:                  DefaultDir,
 	}
 }
