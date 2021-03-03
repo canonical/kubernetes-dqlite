@@ -110,7 +110,7 @@ const (
 )
 
 // NewKubeletCommand creates a *cobra.Command object with default parameters
-func NewKubeletCommand() *cobra.Command {
+func NewKubeletCommand(ctx ...context.Context) *cobra.Command {
 	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
 	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
 	kubeletFlags := options.NewKubeletFlags()
@@ -277,7 +277,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
 				klog.ErrorS(err, "kubelet running with insufficient permissions")
 			}
 			// set up signal context here in order to be reused by kubelet and docker shim
-			ctx := genericapiserver.SetupSignalContext()
+			runctx := context.Background()
+			if len(ctx) == 0 {
+				runctx = genericapiserver.SetupSignalContext()
+			} else {
+				runctx = ctx[0]
+			}
 
 			// make the kubelet's config safe for logging
 			config := kubeletServer.KubeletConfiguration.DeepCopy()
@@ -288,7 +293,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
 			klog.V(5).InfoS("KubeletConfiguration", "configuration", kubeletServer.KubeletConfiguration)
 
 			// run the kubelet
-			if err := Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate); err != nil {
+			if err := Run(runctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate); err != nil {
 				klog.ErrorS(err, "Failed to run kubelet")
 				os.Exit(1)
 			}
