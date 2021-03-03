@@ -91,7 +91,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
 }
 
 // NewAPIServerCommand creates a *cobra.Command object with default parameters
-func NewAPIServerCommand() *cobra.Command {
+func NewAPIServerCommand(stopCh... <- chan struct{}) *cobra.Command {
 	s := options.NewServerRunOptions()
 	cmd := &cobra.Command{
 		Use: "kube-apiserver",
@@ -127,8 +127,11 @@ cluster's shared state through which all other components interact.`,
 			if errs := completedOptions.Validate(); len(errs) != 0 {
 				return utilerrors.NewAggregate(errs)
 			}
-
-			return Run(completedOptions, genericapiserver.SetupSignalHandler())
+			if len(stopCh) != 0 {
+				return Run(completedOptions, stopCh[0])
+			} else {
+				return Run(completedOptions, genericapiserver.SetupSignalHandler())
+			}
 		},
 		Args: func(cmd *cobra.Command, args []string) error {
 			for _, arg := range args {
