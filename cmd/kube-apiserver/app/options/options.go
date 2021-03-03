@@ -167,7 +167,7 @@ func addDummyInsecureFlags(fs *pflag.FlagSet) {
 func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 	// Add the generic flags.
 	s.GenericServerRunOptions.AddUniversalFlags(fss.FlagSet("generic"))
-	s.Etcd.AddFlags(fss.FlagSet("etcd"))
+	s.Etcd.AddFlags(fss.FlagSet("storage"))
 	s.SecureServing.AddFlags(fss.FlagSet("secure serving"))
 	addDummyInsecureFlags(fss.FlagSet("insecure serving"))
 	s.Audit.AddFlags(fss.FlagSet("auditing"))
