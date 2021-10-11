@@ -26,7 +26,9 @@ import (
 // Options has all the params needed to run a Kubelite
 type Options struct {
 	SchedulerArgsFile         string
+	StartScheduler            bool
 	ControllerManagerArgsFile string
+	StartControllerManager    bool
 	ProxyArgsFile             string
 	KubeletArgsFile           string
 	APIServerArgsFile         string
@@ -37,7 +39,9 @@ type Options struct {
 func NewOptions() (*Options){
 	o := Options{
 		"/var/snap/microk8s/current/args/kube-scheduler",
+		true,
 		"/var/snap/microk8s/current/args/kube-controller-manager",
+		true,
 		"/var/snap/microk8s/current/args/kube-proxy",
 		"/var/snap/microk8s/current/args/kubelet",
 		"/var/snap/microk8s/current/args/kube-apiserver",

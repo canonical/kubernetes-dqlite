@@ -42,11 +42,15 @@ var liteCmd = &cobra.Command{
 			go daemon.StartAPIServer(apiserverArgs, ctx.Done())
 			daemon.WaitForAPIServer(opts.KubeconfigFile, 360 * time.Second)
 
-			controllerArgs := options.ReadArgsFromFile(opts.ControllerManagerArgsFile)
-			go daemon.StartControllerManager(controllerArgs, ctx)
+			if opts.StartControllerManager {
+				controllerArgs := options.ReadArgsFromFile(opts.ControllerManagerArgsFile)
+				go daemon.StartControllerManager(controllerArgs, ctx)
+			}
 
-			schedulerArgs := options.ReadArgsFromFile(opts.SchedulerArgsFile)
-			go daemon.StartScheduler(schedulerArgs, ctx)
+			if opts.StartScheduler {
+				schedulerArgs := options.ReadArgsFromFile(opts.SchedulerArgsFile)
+				go daemon.StartScheduler(schedulerArgs, ctx)
+			}
 		}
 
 		proxyArgs := options.ReadArgsFromFile(opts.ProxyArgsFile)
@@ -70,7 +74,9 @@ func init() {
 	cobra.OnInitialize()
 
 	liteCmd.Flags().StringVar(&opts.SchedulerArgsFile, "scheduler-args-file", opts.SchedulerArgsFile, "file with the arguments for the scheduler")
+	liteCmd.Flags().BoolVar(&opts.StartScheduler, "start-scheduler", opts.StartScheduler, "start the scheduler")
 	liteCmd.Flags().StringVar(&opts.ControllerManagerArgsFile, "controller-manager-args-file", opts.ControllerManagerArgsFile, "file with the arguments for the controller manager")
+	liteCmd.Flags().BoolVar(&opts.StartControllerManager, "start-controller-manager", opts.StartControllerManager, "start the controller manager")
 	liteCmd.Flags().StringVar(&opts.ProxyArgsFile, "proxy-args-file", opts.ProxyArgsFile , "file with the arguments for kube-proxy")
 	liteCmd.Flags().StringVar(&opts.KubeletArgsFile, "kubelet-args-file", opts.KubeletArgsFile, "file with the arguments for kubelet")
 	liteCmd.Flags().StringVar(&opts.APIServerArgsFile, "apiserver-args-file", opts.APIServerArgsFile, "file with the arguments for the API server")

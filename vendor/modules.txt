@@ -90,7 +90,7 @@ github.com/PuerkitoBio/urlesc
 github.com/armon/circbuf
 # github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a => github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
 github.com/asaskevich/govalidator
-# github.com/auth0/go-jwt-middleware v0.0.0-20170425171159-5493cabe49f7 => github.com/auth0/go-jwt-middleware v0.0.0-20170425171159-5493cabe49f7
+# github.com/auth0/go-jwt-middleware v1.0.1 => github.com/auth0/go-jwt-middleware v1.0.1
 ## explicit
 # github.com/aws/aws-sdk-go v1.38.49 => github.com/aws/aws-sdk-go v1.38.49
 ## explicit
@@ -227,8 +227,6 @@ github.com/cyphar/filepath-securejoin
 github.com/davecgh/go-spew/spew
 # github.com/daviddengcn/go-colortext v0.0.0-20160507010035-511bcaf42ccd => github.com/daviddengcn/go-colortext v0.0.0-20160507010035-511bcaf42ccd
 github.com/daviddengcn/go-colortext
-# github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/dgrijalva/jwt-go v3.2.0+incompatible
-github.com/dgrijalva/jwt-go
 # github.com/docker/distribution v2.7.1+incompatible => github.com/docker/distribution v2.7.1+incompatible
 ## explicit
 github.com/docker/distribution/digestset
@@ -282,6 +280,8 @@ github.com/evanphx/json-patch
 github.com/exponent-io/jsonpath
 # github.com/fatih/camelcase v1.0.0 => github.com/fatih/camelcase v1.0.0
 github.com/fatih/camelcase
+# github.com/felixge/httpsnoop v1.0.1 => github.com/felixge/httpsnoop v1.0.1
+github.com/felixge/httpsnoop
 # github.com/form3tech-oss/jwt-go v3.2.3+incompatible => github.com/form3tech-oss/jwt-go v3.2.3+incompatible
 github.com/form3tech-oss/jwt-go
 # github.com/fsnotify/fsnotify v1.4.9 => github.com/fsnotify/fsnotify v1.4.9
@@ -469,7 +469,6 @@ github.com/gregjones/httpcache
 github.com/gregjones/httpcache/diskcache
 # github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 => github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 github.com/grpc-ecosystem/go-grpc-middleware
-github.com/grpc-ecosystem/go-grpc-middleware/logging/settable
 # github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 => github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 github.com/grpc-ecosystem/go-grpc-prometheus
 # github.com/grpc-ecosystem/grpc-gateway v1.16.0 => github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -480,7 +479,7 @@ github.com/grpc-ecosystem/grpc-gateway/utilities
 ## explicit
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
-# github.com/heketi/heketi v10.2.0+incompatible => github.com/heketi/heketi v10.2.0+incompatible
+# github.com/heketi/heketi v10.3.0+incompatible => github.com/heketi/heketi v10.3.0+incompatible
 ## explicit
 github.com/heketi/heketi/client/api/go-client
 github.com/heketi/heketi/pkg/glusterfs/api
@@ -708,10 +707,6 @@ github.com/shurcooL/sanitized_anchor_name
 github.com/sirupsen/logrus
 # github.com/soheilhy/cmux v0.1.5 => github.com/soheilhy/cmux v0.1.5
 github.com/soheilhy/cmux
-# github.com/spf13/afero v1.2.2 => github.com/spf13/afero v1.2.2
-## explicit
-github.com/spf13/afero
-github.com/spf13/afero/mem
 # github.com/spf13/cobra v1.1.3 => github.com/spf13/cobra v1.1.3
 ## explicit
 github.com/spf13/cobra
@@ -736,8 +731,6 @@ github.com/stretchr/testify/require
 github.com/syndtr/gocapability/capability
 # github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802 => github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802
 github.com/tmc/grpc-websocket-proxy/wsproxy
-# github.com/urfave/negroni v1.0.0 => github.com/urfave/negroni v1.0.0
-## explicit
 # github.com/vishvananda/netlink v1.1.0 => github.com/vishvananda/netlink v1.1.0
 ## explicit
 github.com/vishvananda/netlink
@@ -802,7 +795,6 @@ go.etcd.io/etcd/client/pkg/v3/logutil
 go.etcd.io/etcd/client/pkg/v3/pathutil
 go.etcd.io/etcd/client/pkg/v3/srv
 go.etcd.io/etcd/client/pkg/v3/systemd
-go.etcd.io/etcd/client/pkg/v3/testutil
 go.etcd.io/etcd/client/pkg/v3/tlsutil
 go.etcd.io/etcd/client/pkg/v3/transport
 go.etcd.io/etcd/client/pkg/v3/types
@@ -815,9 +807,6 @@ go.etcd.io/etcd/client/v3/concurrency
 go.etcd.io/etcd/client/v3/credentials
 go.etcd.io/etcd/client/v3/internal/endpoint
 go.etcd.io/etcd/client/v3/internal/resolver
-go.etcd.io/etcd/client/v3/namespace
-go.etcd.io/etcd/client/v3/naming/endpoints
-go.etcd.io/etcd/client/v3/naming/endpoints/internal
 # go.etcd.io/etcd/pkg/v3 v3.5.0 => go.etcd.io/etcd/pkg/v3 v3.5.0
 go.etcd.io/etcd/pkg/v3/adt
 go.etcd.io/etcd/pkg/v3/contention
@@ -877,14 +866,10 @@ go.etcd.io/etcd/server/v3/lease/leasepb
 go.etcd.io/etcd/server/v3/mvcc
 go.etcd.io/etcd/server/v3/mvcc/backend
 go.etcd.io/etcd/server/v3/mvcc/buckets
-go.etcd.io/etcd/server/v3/proxy/grpcproxy
 go.etcd.io/etcd/server/v3/proxy/grpcproxy/adapter
-go.etcd.io/etcd/server/v3/proxy/grpcproxy/cache
 go.etcd.io/etcd/server/v3/verify
 go.etcd.io/etcd/server/v3/wal
 go.etcd.io/etcd/server/v3/wal/walpb
-# go.etcd.io/etcd/tests/v3 v3.5.0 => go.etcd.io/etcd/tests/v3 v3.5.0
-go.etcd.io/etcd/tests/v3/integration
 # go.opencensus.io v0.22.3 => go.opencensus.io v0.22.3
 go.opencensus.io
 go.opencensus.io/internal
@@ -906,6 +891,8 @@ go.opencensus.io/trace/tracestate
 go.opentelemetry.io/contrib
 # go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.20.0 => go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.20.0
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.20.0 => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.20.0
+go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 # go.opentelemetry.io/otel v0.20.0 => go.opentelemetry.io/otel v0.20.0
 go.opentelemetry.io/otel
 go.opentelemetry.io/otel/attribute
@@ -926,6 +913,7 @@ go.opentelemetry.io/otel/exporters/otlp/internal/transform
 go.opentelemetry.io/otel/exporters/otlp/otlpgrpc
 # go.opentelemetry.io/otel/metric v0.20.0 => go.opentelemetry.io/otel/metric v0.20.0
 go.opentelemetry.io/otel/metric
+go.opentelemetry.io/otel/metric/global
 go.opentelemetry.io/otel/metric/number
 go.opentelemetry.io/otel/metric/registry
 # go.opentelemetry.io/otel/sdk v0.20.0 => go.opentelemetry.io/otel/sdk v0.20.0
@@ -1543,6 +1531,7 @@ k8s.io/apiserver/pkg/storage/errors
 k8s.io/apiserver/pkg/storage/etcd3
 k8s.io/apiserver/pkg/storage/etcd3/metrics
 k8s.io/apiserver/pkg/storage/etcd3/testing
+k8s.io/apiserver/pkg/storage/etcd3/testserver
 k8s.io/apiserver/pkg/storage/names
 k8s.io/apiserver/pkg/storage/storagebackend
 k8s.io/apiserver/pkg/storage/storagebackend/factory
@@ -1555,6 +1544,7 @@ k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1
 k8s.io/apiserver/pkg/storage/value/encrypt/identity
 k8s.io/apiserver/pkg/storage/value/encrypt/secretbox
 k8s.io/apiserver/pkg/storageversion
+k8s.io/apiserver/pkg/tracing
 k8s.io/apiserver/pkg/util/apihelpers
 k8s.io/apiserver/pkg/util/dryrun
 k8s.io/apiserver/pkg/util/feature
@@ -1958,6 +1948,7 @@ k8s.io/component-base/metrics/prometheus/version
 k8s.io/component-base/metrics/prometheus/workqueue
 k8s.io/component-base/metrics/testutil
 k8s.io/component-base/term
+k8s.io/component-base/traces
 k8s.io/component-base/version
 k8s.io/component-base/version/verflag
 # k8s.io/component-helpers v0.0.0 => ./staging/src/k8s.io/component-helpers
@@ -2407,7 +2398,7 @@ sigs.k8s.io/yaml
 # github.com/armon/go-metrics => github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 # github.com/armon/go-radix => github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310
 # github.com/asaskevich/govalidator => github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
-# github.com/auth0/go-jwt-middleware => github.com/auth0/go-jwt-middleware v0.0.0-20170425171159-5493cabe49f7
+# github.com/auth0/go-jwt-middleware => github.com/auth0/go-jwt-middleware v1.0.1
 # github.com/aws/aws-sdk-go => github.com/aws/aws-sdk-go v1.38.49
 # github.com/benbjohnson/clock => github.com/benbjohnson/clock v1.0.3
 # github.com/beorn7/perks => github.com/beorn7/perks v1.0.1
@@ -2465,12 +2456,12 @@ sigs.k8s.io/yaml
 # github.com/emicklei/go-restful => github.com/emicklei/go-restful v2.9.5+incompatible
 # github.com/envoyproxy/go-control-plane => github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d
 # github.com/envoyproxy/protoc-gen-validate => github.com/envoyproxy/protoc-gen-validate v0.1.0
-# github.com/etcd-io/gofail => github.com/etcd-io/gofail v0.0.0-20190801230047-ad7f989257ca
 # github.com/euank/go-kmsg-parser => github.com/euank/go-kmsg-parser v2.0.0+incompatible
 # github.com/evanphx/json-patch => github.com/evanphx/json-patch v4.11.0+incompatible
 # github.com/exponent-io/jsonpath => github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d
 # github.com/fatih/camelcase => github.com/fatih/camelcase v1.0.0
 # github.com/fatih/color => github.com/fatih/color v1.7.0
+# github.com/felixge/httpsnoop => github.com/felixge/httpsnoop v1.0.1
 # github.com/flynn/go-shlex => github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568
 # github.com/fogleman/gg => github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90
 # github.com/form3tech-oss/jwt-go => github.com/form3tech-oss/jwt-go v3.2.3+incompatible
@@ -2512,7 +2503,7 @@ sigs.k8s.io/yaml
 # github.com/googleapis/gax-go/v2 => github.com/googleapis/gax-go/v2 v2.0.5
 # github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.5.5
 # github.com/gophercloud/gophercloud => github.com/gophercloud/gophercloud v0.1.0
-# github.com/gopherjs/gopherjs => github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1
+# github.com/gopherjs/gopherjs => github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00
 # github.com/gorilla/mux => github.com/gorilla/mux v1.8.0
 # github.com/gorilla/websocket => github.com/gorilla/websocket v1.4.2
 # github.com/gregjones/httpcache => github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7
@@ -2537,7 +2528,7 @@ sigs.k8s.io/yaml
 # github.com/hashicorp/mdns => github.com/hashicorp/mdns v1.0.0
 # github.com/hashicorp/memberlist => github.com/hashicorp/memberlist v0.1.3
 # github.com/hashicorp/serf => github.com/hashicorp/serf v0.8.2
-# github.com/heketi/heketi => github.com/heketi/heketi v10.2.0+incompatible
+# github.com/heketi/heketi => github.com/heketi/heketi v10.3.0+incompatible
 # github.com/heketi/tests => github.com/heketi/tests v0.0.0-20151005000721-f3775cbcefd6
 # github.com/ianlancetaylor/demangle => github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6
 # github.com/imdario/mergo => github.com/imdario/mergo v0.3.5
@@ -2567,7 +2558,7 @@ sigs.k8s.io/yaml
 # github.com/mailru/easyjson => github.com/mailru/easyjson v0.7.6
 # github.com/mattn/go-colorable => github.com/mattn/go-colorable v0.0.9
 # github.com/mattn/go-isatty => github.com/mattn/go-isatty v0.0.3
-# github.com/mattn/go-runewidth => github.com/mattn/go-runewidth v0.0.9
+# github.com/mattn/go-runewidth => github.com/mattn/go-runewidth v0.0.7
 # github.com/matttproud/golang_protobuf_extensions => github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369
 # github.com/miekg/dns => github.com/miekg/dns v1.0.14
 # github.com/mindprince/gonvml => github.com/mindprince/gonvml v0.0.0-20190828220739-9ebdce4bb989
@@ -2595,7 +2586,7 @@ sigs.k8s.io/yaml
 # github.com/mxk/go-flowrate => github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f
 # github.com/niemeyer/pretty => github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
 # github.com/nxadm/tail => github.com/nxadm/tail v1.4.4
-# github.com/olekukonko/tablewriter => github.com/olekukonko/tablewriter v0.0.5
+# github.com/olekukonko/tablewriter => github.com/olekukonko/tablewriter v0.0.4
 # github.com/onsi/ginkgo => github.com/onsi/ginkgo v1.14.0
 # github.com/onsi/gomega => github.com/onsi/gomega v1.10.1
 # github.com/opencontainers/go-digest => github.com/opencontainers/go-digest v1.0.0
@@ -2629,7 +2620,7 @@ sigs.k8s.io/yaml
 # github.com/sergi/go-diff => github.com/sergi/go-diff v1.1.0
 # github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
 # github.com/sirupsen/logrus => github.com/sirupsen/logrus v1.7.0
-# github.com/smartystreets/assertions => github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
+# github.com/smartystreets/assertions => github.com/smartystreets/assertions v1.1.0
 # github.com/smartystreets/goconvey => github.com/smartystreets/goconvey v1.6.4
 # github.com/soheilhy/cmux => github.com/soheilhy/cmux v0.1.5
 # github.com/spf13/afero => github.com/spf13/afero v1.2.2
@@ -2659,14 +2650,13 @@ sigs.k8s.io/yaml
 # go.etcd.io/etcd/client/pkg/v3 => go.etcd.io/etcd/client/pkg/v3 v3.5.0
 # go.etcd.io/etcd/client/v2 => go.etcd.io/etcd/client/v2 v2.305.0
 # go.etcd.io/etcd/client/v3 => go.etcd.io/etcd/client/v3 v3.5.0
-# go.etcd.io/etcd/etcdutl/v3 => go.etcd.io/etcd/etcdutl/v3 v3.5.0
 # go.etcd.io/etcd/pkg/v3 => go.etcd.io/etcd/pkg/v3 v3.5.0
 # go.etcd.io/etcd/raft/v3 => go.etcd.io/etcd/raft/v3 v3.5.0
 # go.etcd.io/etcd/server/v3 => go.etcd.io/etcd/server/v3 v3.5.0
-# go.etcd.io/etcd/tests/v3 => go.etcd.io/etcd/tests/v3 v3.5.0
 # go.opencensus.io => go.opencensus.io v0.22.3
 # go.opentelemetry.io/contrib => go.opentelemetry.io/contrib v0.20.0
 # go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc => go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.20.0
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.20.0
 # go.opentelemetry.io/otel => go.opentelemetry.io/otel v0.20.0
 # go.opentelemetry.io/otel/exporters/otlp => go.opentelemetry.io/otel/exporters/otlp v0.20.0
 # go.opentelemetry.io/otel/metric => go.opentelemetry.io/otel/metric v0.20.0
