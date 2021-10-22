@@ -15,6 +15,7 @@ import (
 
 	"github.com/canonical/go-dqlite/app"
 	"github.com/canonical/go-dqlite/client"
+	"github.com/canonical/go-dqlite/internal/bindings"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -774,7 +775,7 @@ func TestRolesAdjustment_ReplaceStandBy(t *testing.T) {
 	// A stand-by goes offline.
 	cleanups[4]()
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	cli, err := apps[0].Leader(context.Background())
 	require.NoError(t, err)
@@ -831,7 +832,7 @@ func TestRolesAdjustment_ReplaceStandByHonorFailureDomains(t *testing.T) {
 	// A stand-by from failure domain 1 goes offline.
 	cleanups[4]()
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	cli, err := apps[0].Leader(context.Background())
 	require.NoError(t, err)
@@ -863,6 +864,17 @@ func TestOpen(t *testing.T) {
 
 	_, err = db.ExecContext(context.Background(), "CREATE TABLE foo(n INT)")
 	assert.NoError(t, err)
+}
+
+// Test some setup options
+func TestOptions(t *testing.T) {
+	options := []app.Option{
+		app.WithNetworkLatency(20 * time.Millisecond),
+		app.WithSnapshotParams(bindings.SnapshotParams{Threshold: 1024, Trailing: 1024}),
+	}
+	app, cleanup := newApp(t, options...)
+	defer cleanup()
+	require.NotNil(t, app)
 }
 
 // Test client connections dropping uncleanly.
